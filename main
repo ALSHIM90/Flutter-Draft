@@ -1,0 +1,375 @@
+from questions import questions
+
+from assessment import (
+    calculate_scores,
+    calculate_percentages,
+    classify_score,
+    determine_next_assessment
+)
+
+from dyslexia_model import (
+    run_dyslexia_from_answers
+)
+
+from adhd_model import (
+    run_adhd_screening
+)
+
+from final_result import (
+    generate_final_result
+)
+# ============================================================
+# LAMSA - MAIN PROGRAM
+# ============================================================
+
+print("\n==========================================")
+print("           WELCOME TO LAMSA")
+print("==========================================\n")
+
+
+# ============================================================
+# 1. GET CHILD AGE
+# ============================================================
+
+while True:
+
+    try:
+
+        age = int(
+            input(
+                "Enter child's age (3-12): "
+            )
+        )
+
+        if 3 <= age <= 12:
+            break
+
+        print(
+            "Please enter an age between 3 and 12."
+        )
+
+    except ValueError:
+
+        print(
+            "Please enter a valid number."
+        )
+
+
+# ============================================================
+# 2. DETERMINE AGE GROUP
+# ============================================================
+
+if 3 <= age <= 5:
+
+    age_group = "3-5"
+
+elif 6 <= age <= 8:
+
+    age_group = "6-8"
+
+else:
+
+    age_group = "9-12"
+
+
+print(
+    "\nSelected age group:",
+    age_group
+)
+
+
+# ============================================================
+# 3. GET QUESTIONS FOR THIS AGE
+# ============================================================
+
+age_questions = []
+
+for question in questions:
+
+    if question["age_group"] == age_group:
+
+        age_questions.append(
+            question
+        )
+
+
+print(
+    "\nNumber of questions:",
+    len(age_questions)
+)
+
+print(
+    "\n=========================================="
+)
+print(
+    "         INITIAL ASSESSMENT"
+)
+print(
+    "==========================================\n"
+)
+
+
+# ============================================================
+# 4. ASK QUESTIONS
+# ============================================================
+
+answers = {}
+
+
+for question_number, question in enumerate(
+    age_questions,
+    start=1
+):
+
+    print(
+        f"\nQuestion {question_number}"
+    )
+
+    print(
+        question["question"]
+    )
+
+    print()
+
+    for option_number, option in enumerate(
+        question["options"],
+        start=1
+    ):
+
+        print(
+            f"{option_number}. {option}"
+        )
+
+
+    # ----------------------------------------
+    # Get valid option number
+    # ----------------------------------------
+
+    while True:
+
+        try:
+
+            selected_number = int(
+                input(
+                    "\nChoose option number: "
+                )
+            )
+
+            if (
+                1 <= selected_number
+                <= len(question["options"])
+            ):
+
+                break
+
+            print(
+                "Please choose a valid option."
+            )
+
+        except ValueError:
+
+            print(
+                "Please enter an option number."
+            )
+
+
+    selected_answer = (
+        question["options"][
+            selected_number - 1
+        ]
+    )
+
+
+    answers[
+        question["id"]
+    ] = selected_answer
+
+
+# ============================================================
+# 5. CALCULATE INITIAL SCORES
+# ============================================================
+
+scores = calculate_scores(
+    answers,
+    age_group
+)
+
+percentages = calculate_percentages(
+    scores
+)
+
+
+# ============================================================
+# 6. DISPLAY INITIAL RESULTS
+# ============================================================
+
+print(
+    "\n\n=========================================="
+)
+print(
+    "          INITIAL RESULTS"
+)
+print(
+    "==========================================\n"
+)
+
+
+for skill in percentages:
+
+    percentage = percentages[
+        skill
+    ]
+
+    classification = (
+        classify_score(
+            percentage
+        )
+    )
+
+    print(
+        f"{skill.capitalize()}: "
+        f"{percentage:.0f}% "
+        f"- {classification}"
+    )
+
+
+# ============================================================
+# 7. DETERMINE NEXT ASSESSMENT
+# ============================================================
+
+next_assessment = (
+    determine_next_assessment(
+        percentages
+    )
+)
+
+dyslexia_result = None
+adhd_result = None
+
+print(
+    "\n=========================================="
+)
+print(
+    "             NEXT STEP"
+)
+print(
+    "=========================================="
+)
+
+
+# ============================================================
+# 8. DYSLEXIA
+# ============================================================
+
+if next_assessment["dyslexia"]:
+
+    print(
+        "\nFurther Dyslexia screening recommended."
+    )
+
+    start_dyslexia = input(
+        "\nRun Dyslexia model using "
+        "the child's answers? "
+        "(y/n): "
+    ).strip().lower()
+
+    if start_dyslexia == "y":
+
+        dyslexia_result = (
+            run_dyslexia_from_answers(
+                age=age,
+                age_group=age_group,
+                answers=answers,
+                questions=questions
+            )
+        )
+
+    else:
+
+        print(
+            "Dyslexia screening skipped."
+        )
+
+else:
+
+    print(
+        "\nDyslexia pathway was not triggered."
+    )
+
+# ============================================================
+# 9. ADHD
+# ============================================================
+
+if next_assessment["adhd"]:
+
+    print(
+        "\nFurther ADHD screening recommended."
+    )
+
+    print(
+        "Attention performance triggered "
+        "the ADHD pathway."
+    )
+
+
+    run_adhd = input(
+        "\nStart ADHD model screening? "
+        "(y/n): "
+    ).strip().lower()
+
+
+    if run_adhd == "y":
+
+        print(
+            "\nStarting ADHD model..."
+        )
+
+        adhd_result = (
+            run_adhd_screening()
+        )
+
+
+    else:
+
+        print(
+            "\nADHD screening skipped."
+        )
+
+
+else:
+
+    print(
+        "\nADHD pathway was not triggered."
+    )
+
+
+# ============================================================
+# 10. FINISH
+# ============================================================
+
+print(
+    "\n\n=========================================="
+)
+print(
+    "         ASSESSMENT FINISHED"
+)
+print(
+    "=========================================="
+)
+
+print(
+    "\nImportant:"
+)
+
+print(
+    "These results are screening indicators only "
+    "and are not a medical diagnosis."
+)
+
+print()
+
+generate_final_result(
+    percentages=percentages,
+    dyslexia_result=dyslexia_result,
+    adhd_result=adhd_result
+)
