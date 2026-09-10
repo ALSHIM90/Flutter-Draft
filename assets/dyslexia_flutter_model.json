@@ -1,0 +1,8 @@
+{
+  "feature_names": ["q1", "q2", "q3"],
+  "scaler_mean": [1.0, 0.5, 0.0],
+  "scaler_scale": [1.0, 1.0, 1.0],
+  "coefficients": [0.8, 0.5, 0.3],
+  "intercept": -0.5,
+  "threshold": 0.5
+}
